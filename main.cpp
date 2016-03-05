@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <GL/gl.h>
 #include <exception>
+#include <fstream>
 
 #define GLM_FORCE_RADIANS
 
@@ -22,61 +23,6 @@ const int MAP_HEIGHT = 512;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
-
-const char* vert_shader_src =
-"#version 330 core\n"
-""
-"uniform mat4 mv_mat;"
-"uniform mat4 p_mat;"
-"uniform int map_width;"
-"uniform int map_height;"
-""
-"layout(location = 0) in vec3 position_attr;\n"
-"layout(location = 1) in vec3 normal_attr;"
-""
-"out vec3 position;"
-"out vec3 barycentric;"
-"out vec3 normal;"
-"out vec4 screen_position;"
-""
-"void main(){\n"
-" position = position_attr;"
-" screen_position = p_mat * mv_mat * vec4(position_attr, 1.0);"
-" gl_Position = screen_position;"
-" normal = normal_attr;"
-""
-" vec3 barycentric_verts_sequence[3] = vec3[](vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0));"
-" int row = gl_VertexID / map_width;"
-" int col = gl_VertexID % map_width;"
-" int sequence = (col + (2 * row)) % 3;\n"
-" barycentric = barycentric_verts_sequence[sequence];\n"
-"}\n"
-"";
-
-const char* frag_shader_src =
-"#version 330 core\n"
-""
-"in vec3 position;"
-"in vec3 barycentric;"
-"in vec3 normal;"
-"in vec4 screen_position;"
-"out vec3 color;"
-""
-"uniform sampler2D granite;"
-""
-"void main(){"
-"float dist = (screen_position.x * screen_position.x + screen_position.z * screen_position.z + screen_position.y * screen_position.y) / 750.f;"
-" float bg_component = clamp(dist / 350.f, 0.f, 1.f);"
-" if(any(lessThan(barycentric, vec3(0.0075, 0.0075, 0.0075)))){"
-"   color = vec3(0.0, 0.0, 0.0);"
-" } else { "
-"   color = texture2D(granite, mod(position.xz / 64.0, 1.0)).xyz;"
-" }"
-" float phong_coef = dot(normal * -1.0, normalize(vec3(-1.0, -5.0, -2.0)));"
-" float light_coef = 0.25 + phong_coef * 0.75;"
-" color = color * light_coef;"
-" color = color * (1 - bg_component) + bg_component * vec3(.5f, .7f, 1.f);\n"
-"}";
 
 //Model-View-Matrix
 glm::mat4 mv_mat;
@@ -163,6 +109,45 @@ void glew_error_callback(int type, const char* message){
   std::cout << "GLEW Error: " << type << " : " << message << std::endl;
 }
 
+GLuint shader_from_file(const char* filename, GLenum shader_type){
+  std::ifstream shader_file(filename, std::ios::ate | std::ios::binary);
+
+  if(!shader_file.is_open()){
+    std::cerr << "Failed to load shader from file '" << filename << "'!" << std::endl;
+    return (GLuint)NULL;
+  }
+
+  int file_size = shader_file.tellg();
+  shader_file.seekg(0);
+
+  char buf[file_size];
+
+  const char* bufs[] = {buf};
+
+  shader_file.read(buf, file_size);
+  shader_file.close();
+
+  GLuint shader_id = glCreateShader(shader_type);
+  glShaderSource(shader_id, 1, (const char* const*)bufs, &file_size);
+  glCompileShader(shader_id);
+
+  GLint shader_compile_status;
+  glGetShaderiv(shader_id, GL_COMPILE_STATUS, &shader_compile_status);
+  if(shader_compile_status == GL_FALSE){
+    GLint log_size;
+    glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &log_size);
+    char log_buf[log_size];
+    glGetShaderInfoLog(shader_id, log_size, NULL, log_buf);
+
+    std::cerr << "Failed to compile shader '" << filename << "': " << std::endl;
+    std::cerr << log_buf << std::endl;
+    glDeleteShader(shader_id);
+    return (GLuint)NULL;
+  }
+
+  return shader_id;
+}
+
 int main(int argc, char* argv[]){
   int window_width = 800;
   int window_height = 600;
@@ -179,29 +164,8 @@ int main(int argc, char* argv[]){
 
   std::cout << glGetString(GL_VERSION) << std::endl;
 
-  int vert_shader_length = strlen(vert_shader_src);
-  GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vert_shader, 1, &vert_shader_src, NULL);
-  glCompileShader(vert_shader);
-  int vert_shader_compile_status;
-  glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &vert_shader_compile_status);
-  if(vert_shader_compile_status == GL_FALSE){
-    char buf[512];
-    glGetShaderInfoLog(vert_shader, 512, NULL, buf);
-    std::cout << buf << std::endl;
-  }
-
-  int frag_shader_length = strlen(frag_shader_src);
-  GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(frag_shader, 1, &frag_shader_src, NULL);
-  glCompileShader(frag_shader);
-  int frag_shader_compile_status;
-  glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &frag_shader_compile_status);
-  if(frag_shader_compile_status == GL_FALSE){
-    char buf[512];
-    glGetShaderInfoLog(frag_shader, 512, NULL, buf);
-    std::cout << buf << std::endl;
-  }
+  GLuint vert_shader = shader_from_file("shader.vs.glsl", GL_VERTEX_SHADER);
+  GLuint frag_shader = shader_from_file("shader.fs.glsl", GL_FRAGMENT_SHADER);
 
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program, vert_shader);
