@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 #include <iostream>
 #include <math.h>
 #include <functional>
@@ -7,7 +9,6 @@
 #include <GLFW/glfw3.h>
 #include <GL/gl.h>
 #include <exception>
-#include <stb/stb_image.h>
 
 #define GLM_FORCE_RADIANS
 
@@ -23,7 +24,7 @@ const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
 
 const char* vert_shader_src =
-"#version 450 core\n"
+"#version 330 core\n"
 ""
 "uniform mat4 mv_mat;"
 "uniform mat4 p_mat;"
@@ -53,7 +54,7 @@ const char* vert_shader_src =
 "";
 
 const char* frag_shader_src =
-"#version 450 core\n"
+"#version 330 core\n"
 ""
 "in vec3 position;"
 "in vec3 barycentric;"
@@ -85,10 +86,59 @@ double rot_x = 0.d;
 double rot_y = 0.d;
 glm::vec3 cam_pos;
 
-void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
     glfwSetWindowShouldClose(window, GL_TRUE);
   }
+}
+
+void window_resize_callback(GLFWwindow* window, int x, int y){
+  glViewport(0, 0, x, y);
+}
+
+GLFWwindow* setup_window(int width, int height, int fullscreen, GLFWwindow* share){
+    // INITIALIZE AND CREATE GLFW WINDOW ///////////////////
+    glfwDefaultWindowHints();
+    glfwWindowHint(GLFW_SAMPLES, 16);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(width, height, "PlayinAround", fullscreen ? glfwGetPrimaryMonitor() : NULL, share);
+
+    if(!window){
+        std::cerr << "Failed to create window." << std::endl;
+        return NULL;
+    }
+
+    if(share){
+        glfwDestroyWindow(share);
+    }
+
+    glfwMakeContextCurrent(window);
+    glfwSetWindowSizeCallback(window, window_resize_callback);
+    glfwSetKeyCallback(window, key_callback);
+
+    // INITIALIZE GLEW ///////////////////////////////////
+    glewExperimental = GL_TRUE;
+    GLenum glew_init_status = glewInit();
+    glGetError(); //Discard error message
+
+    if(glew_init_status != GLEW_OK){
+        std::cout << "Failed to initialize GLEW." << glew_init_status << std::endl;
+        return NULL;
+    }
+
+    // INITIALIZE OPENGL /////////////////////////////////
+    glClearColor(.5f, .7f, 1.f, 1.f);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    GLuint vert_array_id;
+    glGenVertexArrays(1, &vert_array_id);
+    glBindVertexArray(vert_array_id);
+
+    return window;
 }
 
 void update_mouse(GLFWwindow* window){
@@ -113,45 +163,19 @@ void glew_error_callback(int type, const char* message){
   std::cout << "GLEW Error: " << type << " : " << message << std::endl;
 }
 
-void window_resize_callback(GLFWwindow* window, int x, int y){
-  glViewport(0, 0, x, y);
-}
-
 int main(int argc, char* argv[]){
-  GLFWwindow* window;
+  int window_width = 800;
+  int window_height = 600;
+  int fullscreen = false;
 
-  glewExperimental = GL_TRUE;
   if(!glfwInit()){
     std::cout << "Failed to initialize GLFW." << std::endl;
     return EXIT_FAILURE;
   }
 
-  glfwDefaultWindowHints();
-  glfwWindowHint(GLFW_SAMPLES, 16);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  window = glfwCreateWindow(800, 600, "PlayinAround", NULL, NULL);
-
-  if(!window){
-    std::cout << "Failed to create window." << glGetError() << std::endl;
-    glfwTerminate();
-    return EXIT_FAILURE;
-  }
-
-  glfwMakeContextCurrent(window);
-  glfwSetWindowSizeCallback(window, &window_resize_callback);
-
-  GLenum glew_init_status = glewInit();
-  glGetError(); //Discard error message
-
-  if(glew_init_status != GLEW_OK){
-    std::cout << "Failed to initialize GLEW." << glew_init_status << std::endl;
-    return EXIT_FAILURE;
-  }
+  GLFWwindow* window = setup_window(window_width, window_height, fullscreen, NULL);
 
   glfwSetErrorCallback(&glew_error_callback);
-  glfwSetKeyCallback(window, &glfw_key_callback);
 
   std::cout << glGetString(GL_VERSION) << std::endl;
 
@@ -297,19 +321,24 @@ int main(int argc, char* argv[]){
 
   stbi_image_free(granite_buf);
 
+  std::cout << window << std::endl;
+
   while(!glfwWindowShouldClose(window)){
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GL_TRUE){
       update_mouse(window);
     }
 
-    int up_key_state = glfwGetKey(window, GLFW_KEY_W);
-    if(up_key_state == GLFW_PRESS){
-      cam_pos += glm::vec3(sin(rot_y) * cos(rot_x), -sin(rot_x), -cos(rot_y) * cos(rot_x)) * 0.25f;
+    if(glfwGetKey(window, GLFW_KEY_W)){
+      cam_pos += glm::vec3(sin(rot_y) * cos(rot_x), -sin(rot_x), -cos(rot_y) * cos(rot_x)) * 1.25f;
     }
 
-    int down_key_state = glfwGetKey(window, GLFW_KEY_S);
-    if(down_key_state == GLFW_PRESS){
-      cam_pos += glm::vec3(-sin(rot_y) * cos(rot_x), sin(rot_x), cos(rot_y) * cos(rot_x)) * 0.25f;
+    if(glfwGetKey(window, GLFW_KEY_S)){
+      cam_pos += glm::vec3(-sin(rot_y) * cos(rot_x), sin(rot_x), cos(rot_y) * cos(rot_x)) * 1.25f;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_F11)){
+      fullscreen = !fullscreen;
+      window = setup_window(window_width, window_height, fullscreen, window);
     }
 
     std::cout << "rx: " << rot_x << " ry: " << rot_y << std::endl;
@@ -320,6 +349,8 @@ int main(int argc, char* argv[]){
     mv_mat = glm::rotate(mv_mat, (float)rot_y, glm::vec3(0.f, 1.f, 0.f));
     mv_mat = glm::translate(mv_mat, -cam_pos);
     mv_mat = glm::translate(mv_mat, glm::vec3(0.f, -75.d, -128.f));
+
+    glUseProgram(shader_program);
 
     GLint mv_mat_uniform = glGetUniformLocation(shader_program, "mv_mat");
     glUniformMatrix4fv(mv_mat_uniform, 1, GL_FALSE, (float*)&mv_mat);
