@@ -208,7 +208,7 @@ int main(int argc, char* argv[]){
 
   for(int i = 0; i < MAP_HEIGHT; ++i){
     for(int j = 0; j < MAP_WIDTH; ++j){
-      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 128.d, 7, .4d, 7564);
+      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 5, .425d, 49841);
       map_verts[i * MAP_WIDTH + j] = glm::vec3((float)j, (height / 2.f + .5f) * MAP_MAX_ELEVATION * 4.f, (float)i);
     }
   }
@@ -325,6 +325,26 @@ int main(int argc, char* argv[]){
 
   stbi_image_free(grass_buf);
 
+  int snow_tex_w,
+      snow_tex_h,
+      snow_comp;
+  unsigned char* snow_buf = stbi_load("snow.tga", &snow_tex_w, &snow_tex_h, &snow_comp, STBI_rgb);
+
+  std::cout << snow_tex_w << ", " << snow_tex_h << std::endl;
+
+  GLuint snow_tex;
+  glGenTextures(1, &snow_tex);
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, snow_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, snow_tex_w, snow_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, snow_buf);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glUniform1i(glGetUniformLocation(shader_program, "snow"), 0);
+
+  stbi_image_free(snow_buf);
+
   while(!glfwWindowShouldClose(window)){
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GL_TRUE){
       update_mouse(window);
@@ -367,6 +387,10 @@ int main(int argc, char* argv[]){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, grass_tex);
     glUniform1i(glGetUniformLocation(shader_program, "grass"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, snow_tex);
+    glUniform1i(glGetUniformLocation(shader_program, "snow"), 2);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

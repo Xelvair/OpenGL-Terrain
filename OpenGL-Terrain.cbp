@@ -51,6 +51,8 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="noise.cpp" />
 		<Unit filename="noise.h" />
+		<Unit filename="shader.fs.glsl" />
+		<Unit filename="shader.vs.glsl" />
 		<Extensions>
 			<code_completion />
 			<envvars />
