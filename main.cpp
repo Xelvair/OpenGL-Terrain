@@ -50,6 +50,13 @@ GLFWwindow* setup_window(int width, int height, int fullscreen, GLFWwindow* shar
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    if(fullscreen){
+      int mode_count;
+      const GLFWvidmode* modes = glfwGetVideoModes(glfwGetPrimaryMonitor(), &mode_count);
+      width = modes[mode_count - 1].width;
+      height = modes[mode_count - 1].height;
+    }
+
     GLFWwindow* window = glfwCreateWindow(width, height, "PlayinAround", fullscreen ? glfwGetPrimaryMonitor() : NULL, share);
 
     if(!window){
@@ -133,6 +140,7 @@ GLuint shader_from_file(const char* filename, GLenum shader_type){
 
   GLint shader_compile_status;
   glGetShaderiv(shader_id, GL_COMPILE_STATUS, &shader_compile_status);
+
   if(shader_compile_status == GL_FALSE){
     GLint log_size;
     glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &log_size);
@@ -146,6 +154,22 @@ GLuint shader_from_file(const char* filename, GLenum shader_type){
   }
 
   return shader_id;
+}
+
+GLuint create_program(int shader_count, GLuint* shaders){
+  GLuint program = glCreateProgram();
+  for(int i = 0; i < shader_count; ++i){
+    glAttachShader(program, shaders[i]);
+  }
+
+  glLinkProgram(program);
+  glValidateProgram(program);
+
+  for(int i = 0; i < shader_count; ++i){
+    glDetachShader(program, shaders[i]);
+  }
+
+  return program;
 }
 
 int main(int argc, char* argv[]){
@@ -167,14 +191,12 @@ int main(int argc, char* argv[]){
   GLuint vert_shader = shader_from_file("shader.vs.glsl", GL_VERTEX_SHADER);
   GLuint frag_shader = shader_from_file("shader.fs.glsl", GL_FRAGMENT_SHADER);
 
-  GLuint shader_program = glCreateProgram();
-  glAttachShader(shader_program, vert_shader);
-  glAttachShader(shader_program, frag_shader);
-  glLinkProgram(shader_program);
-  glValidateProgram(shader_program);
+  GLuint shaders[] = {vert_shader, frag_shader};
+
+  GLuint shader_program = create_program(sizeof(shaders) / sizeof(GLuint), shaders);
+
   glUseProgram(shader_program);
-  glDetachShader(shader_program, vert_shader);
-  glDetachShader(shader_program, frag_shader);
+
   glDeleteShader(vert_shader);
   glDeleteShader(frag_shader);
 
@@ -267,8 +289,8 @@ int main(int argc, char* argv[]){
 
   int granite_tex_w,
       granite_tex_h,
-      comp;
-  unsigned char* granite_buf = stbi_load("granite.tga", &granite_tex_w, &granite_tex_h, &comp, STBI_rgb);
+      granite_comp;
+  unsigned char* granite_buf = stbi_load("granite.tga", &granite_tex_w, &granite_tex_h, &granite_comp, STBI_rgb);
 
   std::cout << granite_tex_w << ", " << granite_tex_h << std::endl;
 
@@ -285,7 +307,23 @@ int main(int argc, char* argv[]){
 
   stbi_image_free(granite_buf);
 
-  std::cout << window << std::endl;
+  int grass_tex_w,
+      grass_tex_h,
+      grass_comp;
+  unsigned char* grass_buf = stbi_load("grass.tga", &grass_tex_w, &grass_tex_h, &grass_comp, STBI_rgb);
+
+  GLuint grass_tex;
+  glGenTextures(1, &grass_tex);
+  glActiveTexture(1);
+  glBindTexture(GL_TEXTURE_2D, grass_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, grass_tex_w, grass_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, grass_buf);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glUniform1i(glGetUniformLocation(shader_program, "grass"), 1);
+
+  stbi_image_free(grass_buf);
 
   while(!glfwWindowShouldClose(window)){
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GL_TRUE){
@@ -326,6 +364,10 @@ int main(int argc, char* argv[]){
     glBindTexture(GL_TEXTURE_2D, granite_tex);
     glUniform1i(glGetUniformLocation(shader_program, "granite"), 0);
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, grass_tex);
+    glUniform1i(glGetUniformLocation(shader_program, "grass"), 1);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, map_quad_vert_index_buffer);
@@ -357,8 +399,8 @@ int main(int argc, char* argv[]){
   input.SetSize(2048, 2048);
   input.SetBitDepth(32);
 
-  for(int i = 0; i < 2048; ++i){
-    for(int j = 0; j < 2048; ++j){
+  for(int i = 0; i < 32; ++i){
+    for(int j = 0; j < 32; ++j){
       double noise = fbm_perlin_noise2d((double)i / 1024.d, (double)j / 1024.d, 10, .6, 424422) / 2.d + .5d;
       noise = fclamp(noise, 0.d, 1.d);
       RGBApixel pixel = {255 * noise, 255 * noise, 255 * noise, 255};
