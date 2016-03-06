@@ -1,5 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
 #include <iostream>
 #include <math.h>
 #include <functional>
@@ -10,9 +8,18 @@
 #include <GL/gl.h>
 #include <exception>
 #include <fstream>
+#include <chrono>
+
+#if defined(__linux__)
+  #include <sys/time.h>
+#elif defined(_WIN32) || defined(_WIN64)
+
+#endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 #define GLM_FORCE_RADIANS
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -31,6 +38,16 @@ glm::mat4 p_mat;
 double rot_x = 0.d;
 double rot_y = 0.d;
 glm::vec3 cam_pos;
+
+unsigned long systime_msec(){
+  #if defined(__linux__)
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+  #elif defined(_WIN32) || defined(_WIN64)
+    return 0;
+  #endif
+}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
@@ -107,7 +124,7 @@ void update_mouse(GLFWwindow* window){
 
   rot_x -= -delta_y * 0.00075d;
   rot_y += delta_x * 0.00075d;
-  rot_x = fmod(rot_x, 3.1415d);
+  rot_x = fmod(rot_x, 3.1415d / 2);
   rot_y = fmod(rot_y, 3.1415d * 2);
   glfwSetCursorPos(window, 400, 300);
 }
@@ -129,8 +146,10 @@ GLuint texture_from_file(const char* filename){
 
   stbi_image_free(tex_data);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glGenerateMipmap(GL_TEXTURE_2D);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
@@ -229,7 +248,7 @@ int main(int argc, char* argv[]){
 
   for(int i = 0; i < MAP_HEIGHT; ++i){
     for(int j = 0; j < MAP_WIDTH; ++j){
-      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 5, .425d, 49841);
+      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 6, .35d, 49841);
       map_verts[i * MAP_WIDTH + j] = glm::vec3((float)j, (height / 2.f + .5f) * MAP_MAX_ELEVATION * 4.f, (float)i);
     }
   }
@@ -298,7 +317,6 @@ int main(int argc, char* argv[]){
   glEnable(GL_CULL_FACE);
 
   mv_mat = glm::mat4();
-  //p_mat = glm::ortho(-100.f, 100.f, -100.f, 100.f, 10.f, 1000.f);
   p_mat = glm::perspective(1.5f, 800.f / 600.f, 0.1f, 1000.f);
   glClearColor(.5f, .7f, 1.f, 1.f);
 
@@ -312,7 +330,24 @@ int main(int argc, char* argv[]){
   GLuint grass_tex = texture_from_file("grass.tga");
   GLuint snow_tex = texture_from_file("snow.tga");
 
+  unsigned long last_clock = systime_msec();
+  unsigned long cur_clock;
+
+  unsigned int frame_accum = 0;
+  unsigned int clock_accum = 0;
+
   while(!glfwWindowShouldClose(window)){
+    cur_clock = systime_msec();
+    clock_accum += cur_clock - last_clock;
+    last_clock = cur_clock;
+    ++frame_accum;
+
+    if(clock_accum >= 1000){
+      std::cout << "FPS: " << frame_accum << std::endl;
+      frame_accum = 0;
+      clock_accum -= 1000;
+    }
+
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GL_TRUE){
       update_mouse(window);
     }
@@ -329,9 +364,6 @@ int main(int argc, char* argv[]){
       fullscreen = !fullscreen;
       window = setup_window(window_width, window_height, fullscreen, window);
     }
-
-    std::cout << "rx: " << rot_x << " ry: " << rot_y << std::endl;
-    std::cout << "x: " << cam_pos[0] << " y: " << cam_pos[1] << " z: " << cam_pos[2] << std::endl;
 
     mv_mat = glm::mat4();
     mv_mat = glm::rotate(mv_mat, (float)rot_x, glm::vec3(1.f, 0.f, 0.f));

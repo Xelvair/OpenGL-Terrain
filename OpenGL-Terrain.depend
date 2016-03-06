@@ -47,8 +47,7 @@
 	<functional>
 	<glm/glm.hpp>
 
-1457263349 source:/home/xel/OpenGL-Terrain/main.cpp
-	<stb/stb_image.h>
+1457284779 source:/home/xel/OpenGL-Terrain/main.cpp
 	<iostream>
 	<math.h>
 	<functional>
@@ -59,6 +58,9 @@
 	<GL/gl.h>
 	<exception>
 	<fstream>
+	<chrono>
+	<sys/time.h>
+	<stb/stb_image.h>
 	<glm/glm.hpp>
 	<glm/gtc/matrix_transform.hpp>
 	"noise.h"
