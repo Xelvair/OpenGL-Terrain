@@ -116,6 +116,27 @@ void glew_error_callback(int type, const char* message){
   std::cout << "GLEW Error: " << type << " : " << message << std::endl;
 }
 
+GLuint texture_from_file(const char* filename){
+  int tex_width;
+  int tex_height;
+  int tex_comp;
+  unsigned char* tex_data = stbi_load(filename, &tex_width, &tex_height, &tex_comp, STBI_rgb);
+
+  GLuint texture_id;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
+
+  stbi_image_free(tex_data);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  return texture_id;
+}
+
 GLuint shader_from_file(const char* filename, GLenum shader_type){
   std::ifstream shader_file(filename, std::ios::ate | std::ios::binary);
 
@@ -287,63 +308,9 @@ int main(int argc, char* argv[]){
   GLint map_height_uniform_location = glGetUniformLocation(shader_program, "map_height");
   glUniform1i(map_height_uniform_location, MAP_HEIGHT);
 
-  int granite_tex_w,
-      granite_tex_h,
-      granite_comp;
-  unsigned char* granite_buf = stbi_load("granite.tga", &granite_tex_w, &granite_tex_h, &granite_comp, STBI_rgb);
-
-  std::cout << granite_tex_w << ", " << granite_tex_h << std::endl;
-
-  GLuint granite_tex;
-  glGenTextures(1, &granite_tex);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, granite_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, granite_tex_w, granite_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, granite_buf);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glUniform1i(glGetUniformLocation(shader_program, "granite"), 0);
-
-  stbi_image_free(granite_buf);
-
-  int grass_tex_w,
-      grass_tex_h,
-      grass_comp;
-  unsigned char* grass_buf = stbi_load("grass.tga", &grass_tex_w, &grass_tex_h, &grass_comp, STBI_rgb);
-
-  GLuint grass_tex;
-  glGenTextures(1, &grass_tex);
-  glActiveTexture(1);
-  glBindTexture(GL_TEXTURE_2D, grass_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, grass_tex_w, grass_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, grass_buf);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glUniform1i(glGetUniformLocation(shader_program, "grass"), 1);
-
-  stbi_image_free(grass_buf);
-
-  int snow_tex_w,
-      snow_tex_h,
-      snow_comp;
-  unsigned char* snow_buf = stbi_load("snow.tga", &snow_tex_w, &snow_tex_h, &snow_comp, STBI_rgb);
-
-  std::cout << snow_tex_w << ", " << snow_tex_h << std::endl;
-
-  GLuint snow_tex;
-  glGenTextures(1, &snow_tex);
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, snow_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, snow_tex_w, snow_tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, snow_buf);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glUniform1i(glGetUniformLocation(shader_program, "snow"), 0);
-
-  stbi_image_free(snow_buf);
+  GLuint granite_tex = texture_from_file("granite.tga");
+  GLuint grass_tex = texture_from_file("grass.tga");
+  GLuint snow_tex = texture_from_file("snow.tga");
 
   while(!glfwWindowShouldClose(window)){
     if(glfwGetWindowAttrib(window, GLFW_FOCUSED) == GL_TRUE){
@@ -418,21 +385,6 @@ int main(int argc, char* argv[]){
   }
 
   glfwTerminate();
-
-  BMP input;
-  input.SetSize(2048, 2048);
-  input.SetBitDepth(32);
-
-  for(int i = 0; i < 32; ++i){
-    for(int j = 0; j < 32; ++j){
-      double noise = fbm_perlin_noise2d((double)i / 1024.d, (double)j / 1024.d, 10, .6, 424422) / 2.d + .5d;
-      noise = fclamp(noise, 0.d, 1.d);
-      RGBApixel pixel = {255 * noise, 255 * noise, 255 * noise, 255};
-      input.SetPixel(i, j, pixel);
-    }
-  }
-
-  input.WriteToFile("TestBMP.bmp");
 
   return 0;
 }

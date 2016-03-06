@@ -55,7 +55,7 @@ void main(){
   float ground_comp = 1.0 - snow_comp;
 
   float dist = (screen_position.x * screen_position.x + screen_position.z * screen_position.z + screen_position.y * screen_position.y) / 750.f;
-  float bg_component = clamp(dist / 350.f, 0.f, 1.f);
+  float bg_component = clamp(dist / 700.f, 0.f, 1.f);
 
   if(wireframe && any(lessThan(barycentric, vec3(0.0075, 0.0075, 0.0075)))){
     color = vec3(0.0, 0.0, 0.0);
