@@ -25,8 +25,8 @@
 
 #include "noise.h"
 
-const int MAP_WIDTH = 512;
-const int MAP_HEIGHT = 512;
+const int MAP_WIDTH = 1024;
+const int MAP_HEIGHT = 1024;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
@@ -62,7 +62,7 @@ void window_resize_callback(GLFWwindow* window, int x, int y){
 GLFWwindow* setup_window(int width, int height, int fullscreen, GLFWwindow* share){
     // INITIALIZE AND CREATE GLFW WINDOW ///////////////////
     glfwDefaultWindowHints();
-    glfwWindowHint(GLFW_SAMPLES, 16);
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -248,7 +248,7 @@ int main(int argc, char* argv[]){
 
   for(int i = 0; i < MAP_HEIGHT; ++i){
     for(int j = 0; j < MAP_WIDTH; ++j){
-      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 6, .35d, 49841);
+      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 6, .35d, 7457);
       map_verts[i * MAP_WIDTH + j] = glm::vec3((float)j, (height / 2.f + .5f) * MAP_MAX_ELEVATION * 4.f, (float)i);
     }
   }
