@@ -26,9 +26,10 @@
 
 #include "noise.h"
 #include "async_noise.h"
+#include "erosion_simulator.h"
 
-const int MAP_WIDTH = 2048;
-const int MAP_HEIGHT = 2048;
+const int MAP_WIDTH = 512;
+const int MAP_HEIGHT = 512;
 const int MAP_SEED = 4242;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
@@ -217,6 +218,10 @@ GLuint create_program(int shader_count, GLuint* shaders){
 }
 
 int main(int argc, char* argv[]){
+  erosion_simulator es(2, 2);
+
+  std::cout << es.down_pipe_address(1, 0) << std::endl;
+
   int window_width = 800;
   int window_height = 600;
   int fullscreen = false;
@@ -259,7 +264,7 @@ int main(int argc, char* argv[]){
   } else {
     std::cout << cores << " cores detected, spawning worker thread for each core." << std::endl;
   }
-  async_noise(heightmap_buf, MAP_WIDTH, MAP_HEIGHT, 512, 512, cores, 5, 0.4f, MAP_SEED);
+  async_noise(heightmap_buf, MAP_WIDTH, MAP_HEIGHT, 256, 256, cores, 5, 0.4f, MAP_SEED);
   unsigned long end = systime_msec();
   std::cout << "Heightmap generation took " << (double)(end - start) / 1000.d << " seconds." << std::endl;
 

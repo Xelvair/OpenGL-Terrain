@@ -47,7 +47,7 @@
 	<functional>
 	<glm/glm.hpp>
 
-1457365569 source:/home/xel/OpenGL-Terrain/main.cpp
+1457389038 source:/home/xel/OpenGL-Terrain/main.cpp
 	<iostream>
 	<math.h>
 	<functional>
@@ -59,12 +59,14 @@
 	<exception>
 	<fstream>
 	<chrono>
+	<thread>
 	<sys/time.h>
 	<stb/stb_image.h>
 	<glm/glm.hpp>
 	<glm/gtc/matrix_transform.hpp>
 	"noise.h"
 	"async_noise.h"
+	"erosion_simulator.h"
 
 1457356974 /home/xel/OpenGL-Terrain/noise.h
 
@@ -85,4 +87,9 @@
 	"noise.h"
 
 1457364353 /home/xel/OpenGL-Terrain/async_noise.h
+
+1457388404 source:/home/xel/OpenGL-Terrain/erosion_simulator.cpp
+	"erosion_simulator.h"
+
+1457388617 /home/xel/OpenGL-Terrain/erosion_simulator.h
 

@@ -50,6 +50,8 @@
 		</Linker>
 		<Unit filename="async_noise.cpp" />
 		<Unit filename="async_noise.h" />
+		<Unit filename="erosion_simulator.cpp" />
+		<Unit filename="erosion_simulator.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="noise.cpp" />
 		<Unit filename="noise.h" />
