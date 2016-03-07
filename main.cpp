@@ -9,6 +9,7 @@
 #include <exception>
 #include <fstream>
 #include <chrono>
+#include <thread>
 
 #if defined(__linux__)
   #include <sys/time.h>
@@ -26,8 +27,8 @@
 #include "noise.h"
 #include "async_noise.h"
 
-const int MAP_WIDTH = 1024;
-const int MAP_HEIGHT = 1024;
+const int MAP_WIDTH = 2048;
+const int MAP_HEIGHT = 2048;
 const int MAP_SEED = 4242;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
@@ -250,7 +251,17 @@ int main(int argc, char* argv[]){
   glBindVertexArray(vert_array_id);
 
   float* heightmap_buf = new float[MAP_WIDTH * MAP_HEIGHT];
-  async_noise(heightmap_buf, MAP_WIDTH, MAP_HEIGHT, 4, 5, 0.4f, MAP_SEED);
+  unsigned long start = systime_msec();
+  unsigned cores = std::thread::hardware_concurrency();
+  if(cores == 0){
+    std::cerr << "Unable to detect core count! Spawning single worker thread!" << std::endl;
+    cores = 1;
+  } else {
+    std::cout << cores << " cores detected, spawning worker thread for each core." << std::endl;
+  }
+  async_noise(heightmap_buf, MAP_WIDTH, MAP_HEIGHT, 512, 512, cores, 5, 0.4f, MAP_SEED);
+  unsigned long end = systime_msec();
+  std::cout << "Heightmap generation took " << (double)(end - start) / 1000.d << " seconds." << std::endl;
 
   glm::vec3* map_verts = new glm::vec3[MAP_WIDTH * MAP_HEIGHT];
 
@@ -353,7 +364,7 @@ int main(int argc, char* argv[]){
     ++frame_accum;
 
     if(clock_accum >= 1000){
-      std::cout << "FPS: " << frame_accum << std::endl;
+      //std::cout << "FPS: " << frame_accum << std::endl;
       frame_accum = 0;
       clock_accum -= 1000;
     }
