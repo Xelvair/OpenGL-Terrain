@@ -24,9 +24,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "noise.h"
+#include "async_noise.h"
 
 const int MAP_WIDTH = 1024;
 const int MAP_HEIGHT = 1024;
+const int MAP_SEED = 4242;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
@@ -152,6 +154,7 @@ GLuint texture_from_file(const char* filename){
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.f);
 
   return texture_id;
 }
@@ -228,6 +231,7 @@ int main(int argc, char* argv[]){
 
   std::cout << glGetString(GL_VERSION) << std::endl;
 
+  // CREATE SHADER PROGRAM /////////////////////////////
   GLuint vert_shader = shader_from_file("shader.vs.glsl", GL_VERTEX_SHADER);
   GLuint frag_shader = shader_from_file("shader.fs.glsl", GL_FRAGMENT_SHADER);
 
@@ -240,18 +244,24 @@ int main(int argc, char* argv[]){
   glDeleteShader(vert_shader);
   glDeleteShader(frag_shader);
 
+  // GENERATE MAP //////////////////////////////////////
   GLuint vert_array_id;
   glGenVertexArrays(1, &vert_array_id);
   glBindVertexArray(vert_array_id);
+
+  float* heightmap_buf = new float[MAP_WIDTH * MAP_HEIGHT];
+  async_noise(heightmap_buf, MAP_WIDTH, MAP_HEIGHT, 4, 5, 0.4f, MAP_SEED);
 
   glm::vec3* map_verts = new glm::vec3[MAP_WIDTH * MAP_HEIGHT];
 
   for(int i = 0; i < MAP_HEIGHT; ++i){
     for(int j = 0; j < MAP_WIDTH; ++j){
-      float height = fbm_perlin_noise2d((double)j / 128.d, (double)i / 127.d, 6, .35d, 7457);
+      float height = heightmap_buf[j + i * MAP_WIDTH];
       map_verts[i * MAP_WIDTH + j] = glm::vec3((float)j, (height / 2.f + .5f) * MAP_MAX_ELEVATION * 4.f, (float)i);
     }
   }
+
+  delete [] heightmap_buf;
 
   GLuint map_buffer_id;
   glGenBuffers(1, &map_buffer_id);

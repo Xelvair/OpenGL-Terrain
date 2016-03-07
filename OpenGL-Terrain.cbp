@@ -48,6 +48,8 @@
 			<Add library="Xcursor" />
 			<Add library="Xi" />
 		</Linker>
+		<Unit filename="async_noise.cpp" />
+		<Unit filename="async_noise.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="noise.cpp" />
 		<Unit filename="noise.h" />

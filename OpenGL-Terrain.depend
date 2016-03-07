@@ -47,7 +47,7 @@
 	<functional>
 	<glm/glm.hpp>
 
-1457303974 source:/home/xel/OpenGL-Terrain/main.cpp
+1457359844 source:/home/xel/OpenGL-Terrain/main.cpp
 	<iostream>
 	<math.h>
 	<functional>
@@ -64,8 +64,9 @@
 	<glm/glm.hpp>
 	<glm/gtc/matrix_transform.hpp>
 	"noise.h"
+	"async_noise.h"
 
-1456540939 /home/xel/OpenGL-Terrain/noise.h
+1457356974 /home/xel/OpenGL-Terrain/noise.h
 
 1456540939 source:/home/xel/OpenGL-Terrain/noise.cpp
 	"noise.h"
@@ -73,4 +74,13 @@
 	<math.h>
 	<functional>
 	<glm/glm.hpp>
+
+1457358746 source:/home/xel/OpenGL-Terrain/async_noise.cpp
+	"async_noise.h"
+	<math.h>
+	<thread>
+	<iostream>
+	"noise.h"
+
+1457357201 /home/xel/OpenGL-Terrain/async_noise.h
 
