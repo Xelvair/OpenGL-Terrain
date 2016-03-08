@@ -8,6 +8,11 @@
 
 class TerrainRenderer{
   private:
+    struct chunk_info{
+      GLuint buffer_id;
+      bool valid;
+    };
+  
     int     chunkSize;
     int*    chunkSubdivision;
     int     chunkSubdivisionLength;
@@ -16,7 +21,7 @@ class TerrainRenderer{
     float   terrainHeight;
 
     Array2D<float>    heightMap;
-    Array2D<GLuint>   chunkMap;
+    Array2D<chunk_info>   chunkMap;
 	
 	/**
 	 * @brief Calculates the subdivisions for the given chunk
@@ -96,7 +101,7 @@ class TerrainRenderer{
     /**
      * @brief Renders the terrain
      */
-    void render();
+    void render(GLuint modelMatrixUniform);
     
     /**
      * @brief Loads/reloads all visible chunks
@@ -114,6 +119,11 @@ class TerrainRenderer{
      * @param heightmap heightmap to be moved
      */
     void setHeightmap(Array2D<float>&& heightmap);
+    
+    /**
+     * @brief Sets the position of the LOD center
+     */
+    void setObserverPosition(float x, float y);
 };
 
 #endif //TERRAIN_RENDERER_H

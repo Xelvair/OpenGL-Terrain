@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 TerrainRenderer::TerrainRenderer(
@@ -21,7 +22,7 @@ TerrainRenderer::TerrainRenderer(
 ,chunkCenterY(0)
 ,terrainHeight(terrainHeight)
 ,heightMap(width, height, -1.f)
-,chunkMap(chunkSubdivisionLength * 2 - 1, chunkSubdivisionLength * 2 - 1, -1)
+,chunkMap(chunkSubdivisionLength * 2 - 1, chunkSubdivisionLength * 2 - 1, {0, false})
 {
   // GET GPU BUFFERS  
   for(int i = 0; i < chunkMap.height(); ++i){
@@ -35,7 +36,7 @@ TerrainRenderer::TerrainRenderer(
       glGenBuffers(1, &buffer_id);
       glBufferData(buffer_id, sizeof(float) * 3 * vertex_count, NULL, GL_DYNAMIC_DRAW);
       
-      chunkMap(j, i) = buffer_id;
+      chunkMap(j, i) = {buffer_id, false};
     }
   }
 }
@@ -84,7 +85,7 @@ int TerrainRenderer::toAbsolute(int v){
 }
 
 void TerrainRenderer::loadChunk(int x, int y){  
-  int buffer_id = chunkMap(x, y);
+  int buffer_id = chunkMap(x, y).buffer_id;
   
   int rel_x = toRelative(x);
   int rel_y = toRelative(y);
@@ -95,8 +96,6 @@ void TerrainRenderer::loadChunk(int x, int y){
   
   chunk_subdiv_size = std::min(chunk_subdiv_size, chunkSize);
   
-  int chunk_area = getChunkSize2D(subdivisions);
-  
   int chunk_abs_x = chunkCenterX + rel_x;
   int chunk_abs_y = chunkCenterY + rel_y;
   
@@ -104,8 +103,8 @@ void TerrainRenderer::loadChunk(int x, int y){
         chunk_abs_x < 0 || chunk_abs_x >= heightMap.width() / chunkSize
     ||  chunk_abs_y < 0 || chunk_abs_y >= heightMap.height() / chunkSize
   ){
+    chunkMap(x, y).valid = false;
     return;
-    //TODO: flag buffer as non-draw
   }
   
   int chunk_world_x = chunk_abs_x * chunkSize;
@@ -117,14 +116,19 @@ void TerrainRenderer::loadChunk(int x, int y){
   
   for(int i = 0; i < chunk_subdiv_size; ++i){
     for(int j = 0; j < chunk_subdiv_size; ++j){
-      int vert_x = chunk_world_x + j * step_size;
-      int vert_y = chunk_world_y + i * step_size;
+      int vert_x = j * step_size;
+      int vert_y = i * step_size;
       
-      float vert_height = heightMap(vert_x, vert_y) * terrainHeight;
+      int vert_world_x =  chunk_world_x + vert_x;
+      int vert_world_y =  chunk_world_y + vert_y;
+      
+      float vert_height = heightMap(vert_world_x, vert_world_y) * terrainHeight;
       
       buffer_data(j, i) = glm::vec3((float)vert_x, vert_height, (float)vert_y);
     }
   }
+  
+  int chunk_area = getChunkSize2D(subdivisions);
   
   glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
   glBufferData(
@@ -133,17 +137,30 @@ void TerrainRenderer::loadChunk(int x, int y){
     buffer_data.raw(), 
     GL_DYNAMIC_DRAW
   );
+  
+  chunkMap(x, y).valid = true;
 }
 
-void TerrainRenderer::render(){
+void TerrainRenderer::render(GLuint modelMatrixUniform){
   for(int i = 0; i < chunkMap.height(); ++i){
     for(int j = 0; j < chunkMap.width(); ++j){
+      if(!chunkMap(j, i).valid)
+        continue;
+      
       int rel_x = toRelative(j);
       int rel_y = toRelative(i);
       int chunk_vert_count = getChunkSize2D(getChunkSubdivision(rel_x, rel_y));
       
+      glm::mat4 m_mat;
+      m_mat = glm::translate(m_mat, glm::vec3(
+        (chunkCenterX + rel_x) * chunkSize, 
+        0.f, 
+        (chunkCenterY + rel_y) * chunkSize
+      ));
+      glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, (GLfloat*)&m_mat);
+      
       glPointSize(3.f);
-      glBindBuffer(GL_ARRAY_BUFFER, chunkMap(j, i));
+      glBindBuffer(GL_ARRAY_BUFFER, chunkMap(j, i).buffer_id);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
       glEnableVertexAttribArray(0);
       glDrawArrays(GL_POINTS, 0, chunk_vert_count);
@@ -166,4 +183,18 @@ void TerrainRenderer::setHeightmap(const Array2D<float>& heightmap){
 
 void TerrainRenderer::setHeightmap(Array2D<float>&& heightmap){
   this->heightMap = heightmap;
+}
+
+void TerrainRenderer::setObserverPosition(float x, float y){
+  int chunk_x = (int)x / chunkSize;
+  int chunk_y = (int)y / chunkSize;
+  
+  std::cout << chunk_x << ", " << chunk_y << std::endl;
+  
+  if(chunk_x != chunkCenterX || chunk_y != chunkCenterY){
+    chunkCenterX = chunk_x;
+    chunkCenterY = chunk_y;
+  
+    loadAllChunks();
+  }
 }

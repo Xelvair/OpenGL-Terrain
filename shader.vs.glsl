@@ -1,6 +1,7 @@
 #version 330 core
 
-uniform mat4 mv_mat;
+uniform mat4 m_mat;
+uniform mat4 v_mat;
 uniform mat4 p_mat;
 uniform int map_width;
 uniform int map_height;
@@ -15,7 +16,7 @@ out vec4 screen_position;
 
 void main(){
  position = position_attr;
- screen_position = p_mat * mv_mat * vec4(position_attr, 1.0);
+ screen_position = p_mat * v_mat * m_mat * vec4(position_attr, 1.0);
  gl_Position = screen_position;
  normal = normal_attr;
 

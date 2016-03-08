@@ -29,15 +29,16 @@
 #include "erosion_simulator.h"
 #include "TerrainRenderer.h"
 
-const int MAP_WIDTH = 4096;
-const int MAP_HEIGHT = 4096;
+const int MAP_WIDTH = 512;
+const int MAP_HEIGHT = 512;
 const int MAP_SEED = 2323231;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
 
 //Model-View-Matrix
-glm::mat4 mv_mat;
+glm::mat4 m_mat;
+glm::mat4 v_mat;
 glm::mat4 p_mat;
 
 double rot_x = 0.d;
@@ -277,7 +278,7 @@ int main(int argc, char* argv[]){
     }
   }
   
-  int subdivisions[] = {4, 4, 4, 3, 3, 3, 2, 1};
+  int subdivisions[] = {4, 3, 2, 1, 0};
   TerrainRenderer terrain_renderer(
     MAP_WIDTH, MAP_HEIGHT, 
     150.f, 32, subdivisions, 
@@ -362,7 +363,8 @@ int main(int argc, char* argv[]){
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  mv_mat = glm::mat4();
+  m_mat = glm::mat4();
+  v_mat = glm::mat4();
   p_mat = glm::perspective(1.5f, 800.f / 600.f, 0.1f, 2000.f);
   glClearColor(.5f, .7f, 1.f, 1.f);
 
@@ -411,16 +413,19 @@ int main(int argc, char* argv[]){
       window = setup_window(window_width, window_height, fullscreen, window);
     }
 
-    mv_mat = glm::mat4();
-    mv_mat = glm::rotate(mv_mat, (float)rot_x, glm::vec3(1.f, 0.f, 0.f));
-    mv_mat = glm::rotate(mv_mat, (float)rot_y, glm::vec3(0.f, 1.f, 0.f));
-    mv_mat = glm::translate(mv_mat, -cam_pos);
-    mv_mat = glm::translate(mv_mat, glm::vec3(0.f, -75.d, -128.f));
+    v_mat = glm::mat4();
+    v_mat = glm::rotate(v_mat, (float)rot_x, glm::vec3(1.f, 0.f, 0.f));
+    v_mat = glm::rotate(v_mat, (float)rot_y, glm::vec3(0.f, 1.f, 0.f));
+    v_mat = glm::translate(v_mat, -cam_pos);
+    v_mat = glm::translate(v_mat, glm::vec3(0.f, -75.d, 0.f));
 
     glUseProgram(shader_program);
 
-    GLint mv_mat_uniform = glGetUniformLocation(shader_program, "mv_mat");
-    glUniformMatrix4fv(mv_mat_uniform, 1, GL_FALSE, (float*)&mv_mat);
+    GLint m_mat_uniform = glGetUniformLocation(shader_program, "m_mat");
+    glUniformMatrix4fv(m_mat_uniform, 1, GL_FALSE, (float*)&m_mat);
+
+    GLint v_mat_uniform = glGetUniformLocation(shader_program, "v_mat");
+    glUniformMatrix4fv(v_mat_uniform, 1, GL_FALSE, (float*)&v_mat);
 
     GLint p_mat_uniform = glGetUniformLocation(shader_program, "p_mat");
     glUniformMatrix4fv(p_mat_uniform, 1, GL_FALSE, (float*)&p_mat);
@@ -454,7 +459,8 @@ int main(int argc, char* argv[]){
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
 */
-    terrain_renderer.render();
+    terrain_renderer.setObserverPosition(cam_pos[0], cam_pos[2]);
+    terrain_renderer.render(m_mat_uniform);
     glfwSwapBuffers(window);
     glfwPollEvents();
 
