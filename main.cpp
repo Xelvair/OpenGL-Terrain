@@ -30,7 +30,7 @@
 
 const int MAP_WIDTH = 512;
 const int MAP_HEIGHT = 512;
-const int MAP_SEED = 4242;
+const int MAP_SEED = 2323231;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
 const int MAP_QUADS_Y = MAP_HEIGHT - 1;
@@ -343,7 +343,7 @@ int main(int argc, char* argv[]){
   glEnable(GL_CULL_FACE);
 
   mv_mat = glm::mat4();
-  p_mat = glm::perspective(1.5f, 800.f / 600.f, 0.1f, 1000.f);
+  p_mat = glm::perspective(1.5f, 800.f / 600.f, 0.1f, 2000.f);
   glClearColor(.5f, .7f, 1.f, 1.f);
 
   GLint map_width_uniform_location = glGetUniformLocation(shader_program, "map_width");
