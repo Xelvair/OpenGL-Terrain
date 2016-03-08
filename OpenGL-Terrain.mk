@@ -6,7 +6,7 @@
 ProjectName            :=OpenGL-Terrain
 ConfigurationName      :=Debug
 WorkspacePath          := "/home/xel"
-ProjectPath            := "/home/xel/OpenGL-Terrain1"
+ProjectPath            := "/home/xel/OpenGL-Terrain"
 IntermediateDirectory  :=Debug/
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
@@ -88,7 +88,7 @@ PreBuild:
 ## Objects
 ##
 $(IntermediateDirectory)/main.cpp$(ObjectSuffix): main.cpp $(IntermediateDirectory)/main.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain1/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/main.cpp$(DependSuffix): main.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/main.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/main.cpp$(DependSuffix) -MM "main.cpp"
 
@@ -96,7 +96,7 @@ $(IntermediateDirectory)/main.cpp$(PreprocessSuffix): main.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.cpp$(PreprocessSuffix) "main.cpp"
 
 $(IntermediateDirectory)/async_noise.cpp$(ObjectSuffix): async_noise.cpp $(IntermediateDirectory)/async_noise.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain1/async_noise.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/async_noise.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain/async_noise.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/async_noise.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/async_noise.cpp$(DependSuffix): async_noise.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/async_noise.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/async_noise.cpp$(DependSuffix) -MM "async_noise.cpp"
 
@@ -104,7 +104,7 @@ $(IntermediateDirectory)/async_noise.cpp$(PreprocessSuffix): async_noise.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/async_noise.cpp$(PreprocessSuffix) "async_noise.cpp"
 
 $(IntermediateDirectory)/erosion_simulator.cpp$(ObjectSuffix): erosion_simulator.cpp $(IntermediateDirectory)/erosion_simulator.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain1/erosion_simulator.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/erosion_simulator.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain/erosion_simulator.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/erosion_simulator.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/erosion_simulator.cpp$(DependSuffix): erosion_simulator.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/erosion_simulator.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/erosion_simulator.cpp$(DependSuffix) -MM "erosion_simulator.cpp"
 
@@ -112,7 +112,7 @@ $(IntermediateDirectory)/erosion_simulator.cpp$(PreprocessSuffix): erosion_simul
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/erosion_simulator.cpp$(PreprocessSuffix) "erosion_simulator.cpp"
 
 $(IntermediateDirectory)/noise.cpp$(ObjectSuffix): noise.cpp $(IntermediateDirectory)/noise.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain1/noise.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/noise.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain/noise.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/noise.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/noise.cpp$(DependSuffix): noise.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/noise.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/noise.cpp$(DependSuffix) -MM "noise.cpp"
 
@@ -120,7 +120,7 @@ $(IntermediateDirectory)/noise.cpp$(PreprocessSuffix): noise.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/noise.cpp$(PreprocessSuffix) "noise.cpp"
 
 $(IntermediateDirectory)/TerrainRenderer.cpp$(ObjectSuffix): TerrainRenderer.cpp $(IntermediateDirectory)/TerrainRenderer.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain1/TerrainRenderer.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/TerrainRenderer.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/xel/OpenGL-Terrain/TerrainRenderer.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/TerrainRenderer.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/TerrainRenderer.cpp$(DependSuffix): TerrainRenderer.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/TerrainRenderer.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/TerrainRenderer.cpp$(DependSuffix) -MM "TerrainRenderer.cpp"
 

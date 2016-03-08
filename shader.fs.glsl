@@ -17,7 +17,7 @@ float calc_snow_comp(float slope, float height, float ease_begin, float ease_end
 }
 
 void main(){
-  bool wireframe = false;
+  bool wireframe = true;
   float slope = 1.0 - dot(vec3(0.0, 1.0, 0.0), normal);
   float steep_comp = smoothstep(0.3, 0.35, slope);
   float shallow_comp = 1.0 - steep_comp;
@@ -27,7 +27,7 @@ void main(){
   float dist = (screen_position.x * screen_position.x + screen_position.z * screen_position.z + screen_position.y * screen_position.y) / 750.f;
   float bg_component = clamp(dist / 1500.f, 0.f, 1.f);
 
-  float wire_comp = float(wireframe && any(lessThan(barycentric, vec3(0.0075, 0.0075, 0.0075))));
+  float wire_comp = float(wireframe && any(lessThan(barycentric, vec3(0.01, 0.01, 0.01))));
 
 
   color =     texture2D(grass, mod(position.xz / 32.0, 1.0)).xyz * shallow_comp

@@ -17,6 +17,9 @@ class Array2D{
     
     ~Array2D();
     
+    Array2D<T>& operator=(const Array2D& rhs);
+    Array2D<T>& operator=(Array2D&& rhs);
+    
     const T& operator()(int x, int y) const;
     T& operator()(int x, int y);
 
@@ -63,6 +66,28 @@ template<class T>
 Array2D<T>::~Array2D(){
   if(data != nullptr)
     delete [] data;
+}
+
+template<class T>
+Array2D<T>& Array2D<T>::operator=(const Array2D& rhs){
+  w = rhs.w;
+  h = rhs.h;
+  
+  for(int i = 0; i < w * h; ++i){
+    data[i] = rhs.data[i];
+  }
+  
+  return *this;
+}
+
+template<class T>
+Array2D<T>& Array2D<T>::operator=(Array2D&& rhs){
+  w = rhs.w;
+  h = rhs.h;
+  data = rhs.data;
+  rhs.data = nullptr;
+  
+  return *this;
 }
 
 template<class T>

@@ -27,9 +27,10 @@
 #include "noise.h"
 #include "async_noise.h"
 #include "erosion_simulator.h"
+#include "TerrainRenderer.h"
 
-const int MAP_WIDTH = 512;
-const int MAP_HEIGHT = 512;
+const int MAP_WIDTH = 4096;
+const int MAP_HEIGHT = 4096;
 const int MAP_SEED = 2323231;
 const float MAP_MAX_ELEVATION = 50.f;
 const int MAP_QUADS_X = MAP_WIDTH - 1;
@@ -268,6 +269,25 @@ int main(int argc, char* argv[]){
   unsigned long end = systime_msec();
   std::cout << "Heightmap generation took " << (double)(end - start) / 1000.d << " seconds." << std::endl;
 
+  Array2D<float> heightmap(MAP_WIDTH, MAP_HEIGHT, 0.f);
+  //TODO: make async_noise use Array2D instead of float*
+  for(int i = 0; i < MAP_HEIGHT; ++i){
+    for(int j = 0; j < MAP_WIDTH; ++j){
+      heightmap(j, i) = heightmap_buf[j + i * MAP_WIDTH];
+    }
+  }
+  
+  int subdivisions[] = {4, 4, 4, 3, 3, 3, 2, 1};
+  TerrainRenderer terrain_renderer(
+    MAP_WIDTH, MAP_HEIGHT, 
+    150.f, 32, subdivisions, 
+    sizeof(subdivisions) / sizeof(int)
+  );
+  
+  terrain_renderer.setHeightmap(std::move(heightmap));
+  terrain_renderer.setChunkCenter(5, 3);
+  terrain_renderer.loadAllChunks();
+/*
   glm::vec3* map_verts = new glm::vec3[MAP_WIDTH * MAP_HEIGHT];
 
   for(int i = 0; i < MAP_HEIGHT; ++i){
@@ -338,7 +358,7 @@ int main(int argc, char* argv[]){
   int buf_size;
   glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &buf_size);
   std::cout << "buf size: " << buf_size << std::endl;
-
+*/
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
@@ -419,6 +439,7 @@ int main(int argc, char* argv[]){
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+/*
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, map_quad_vert_index_buffer);
 
     glBindBuffer(GL_ARRAY_BUFFER, map_buffer_id);
@@ -432,6 +453,8 @@ int main(int argc, char* argv[]){
     glDrawElements(GL_TRIANGLES, MAP_QUADS_X * MAP_QUADS_Y * 6, GL_UNSIGNED_INT, NULL);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
+*/
+    terrain_renderer.render();
     glfwSwapBuffers(window);
     glfwPollEvents();
 

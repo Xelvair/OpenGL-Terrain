@@ -8,35 +8,15 @@
 
 class TerrainRenderer{
   private:
-    int     width;
-    int     height;
-    int     chunkWidth;
-    int     chunkHeight;
+    int     chunkSize;
     int*    chunkSubdivision;
     int     chunkSubdivisionLength;
     int     chunkCenterX;
     int     chunkCenterY;
+    float   terrainHeight;
 
     Array2D<float>    heightMap;
     Array2D<GLuint>   chunkMap;
-
-	/**
-	 * @brief Returns the width of the chunk map
-	 * @return 
-	 */
-	int getChunkMapWidth();
-	
-	/**
-	 * @brief Returns the height of the chunk map
-	 * @return 
-	 */
-	int getChunkMapHeight();
-	
-	/**
-	 * @brief Returns the area of the chunk map
-	 * @return 
-	 */
-	int getChunkMapSize();
 	
 	/**
 	 * @brief Calculates the subdivisions for the given chunk
@@ -67,13 +47,38 @@ class TerrainRenderer{
    * @return 
    */
   int getChunkSize2D(int subdivisions);
-
+  
+  /**
+   * @brief Reloads the chunk at the specified index
+   * @param x
+   * @param y
+   */
+  void loadChunk(int x, int y);
+  
+  /**
+   * @brief Converts absolute position in chunkMap to center-relative
+   * Because chunks are rectangular, we don't need to distinguish between
+   * X and Y
+   * @param v the X or Y coord to be converted to relative
+   * @return 
+   */
+  int toRelative(int v);
+  
+  /**
+   * @brief Converts center-relative position in chunkMap to absolute
+   * Because chunks are rectangular, we don't need to distinguish between
+   * X and Y
+   * @param v the X or Y coord to be converted to absolute
+   * @return 
+   */
+  int toAbsolute(int v);
+  
   public:
     TerrainRenderer(
       int width, 
       int height, 
-      int chunkWidth, 
-      int chunkHeight, 
+      float terrainHeight,
+      int chunkSize, 
       int* chunkSubdivision, 
       int chunkSubdivisionLength
     );
@@ -87,6 +92,28 @@ class TerrainRenderer{
      * @return 
      */
     int setChunkCenter(int x, int y);
+    
+    /**
+     * @brief Renders the terrain
+     */
+    void render();
+    
+    /**
+     * @brief Loads/reloads all visible chunks
+     */
+    void loadAllChunks();
+    
+    /**
+     * @brief Copies heightmap
+     * @param heightmap heightmap to be copied
+     */
+    void setHeightmap(const Array2D<float>& heightmap);
+    
+    /**
+     * @brief Moves heightmap into renderer
+     * @param heightmap heightmap to be moved
+     */
+    void setHeightmap(Array2D<float>&& heightmap);
 };
 
 #endif //TERRAIN_RENDERER_H
